@@ -31,6 +31,17 @@ jobs:
           #   workflow: Final-runner-update-flow.yml
 
     steps:
+
+      - name: Debug token
+        env:
+          GH_TOKEN: ${{ secrets.ORCHESTRATOR_PAT }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "❌ Secret is empty or not accessible"
+          else
+            echo "✅ Token loaded, length: ${#GH_TOKEN}"
+          fi
+          
       - name: Trigger ${{ matrix.workflow }} in ${{ matrix.repo }}
         id: trigger
         env:
