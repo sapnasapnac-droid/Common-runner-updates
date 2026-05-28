@@ -85,6 +85,7 @@ jobs:
         run: |
           gh run watch "${{ steps.trigger.outputs.run_id }}" \
             --repo "${{ matrix.repo }}" \
+            --interval 60 \
             --exit-status
 
       - name: Report
