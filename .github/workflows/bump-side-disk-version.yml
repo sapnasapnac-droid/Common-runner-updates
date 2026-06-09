@@ -31,8 +31,8 @@ jobs:
       - name: Trigger the GitLab version-bump pipeline
         env:
           GITLAB_HOST: gitlab.tools.saucelabs.net
-          PROJECT_ID: "REPLACE_WITH_PROJECT_ID"   # numeric ID of the side-disk project
-          REF: master                              # branch to run on (master for real repo, main for POC)
+          PROJECT_ID: "REPLACE_WITH_PROJECT_ID"   # numeric ID of poc-for-task-2 (Settings -> General)
+          REF: main                                # POC default branch is "main" (use "master" for the real repo)
           TRIGGER_TOKEN: ${{ secrets.GITLAB_TRIGGER_TOKEN }}
           CYPRESS: ${{ inputs.sauce_cypress_runner }}
           PLAYWRIGHT: ${{ inputs.sauce_playwright_runner }}
