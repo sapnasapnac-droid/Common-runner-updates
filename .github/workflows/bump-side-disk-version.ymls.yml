@@ -1,0 +1,65 @@
+name: Bump side-disk runner versions
+
+# Manual run: gives you a form with the four runner version boxes.
+# Leave a box blank if that runner has no update.
+on:
+  workflow_dispatch:
+    inputs:
+      sauce_cypress_runner:
+        description: "sauce-cypress-runner version (blank = no update)"
+        required: false
+        default: ""
+      sauce_playwright_runner:
+        description: "sauce-playwright-runner version (blank = no update)"
+        required: false
+        default: ""
+      puppeteer_replay_runner:
+        description: "puppeteer-replay-runner version (blank = no update)"
+        required: false
+        default: ""
+      sauce_testcafe_runner:
+        description: "sauce-testcafe-runner version (blank = no update)"
+        required: false
+        default: ""
+
+jobs:
+  trigger-gitlab-pipeline:
+    # NOTE: gitlab.tools.saucelabs.net looks internal. If a GitHub-hosted
+    # runner can't reach it, change this to a self-hosted runner inside the network.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger the GitLab version-bump pipeline
+        env:
+          GITLAB_HOST: gitlab.tools.saucelabs.net
+          PROJECT_ID: "REPLACE_WITH_PROJECT_ID"   # numeric ID of the side-disk project
+          REF: master                              # branch to run on (master for real repo, main for POC)
+          TRIGGER_TOKEN: ${{ secrets.GITLAB_TRIGGER_TOKEN }}
+          CYPRESS: ${{ inputs.sauce_cypress_runner }}
+          PLAYWRIGHT: ${{ inputs.sauce_playwright_runner }}
+          PUPPETEER: ${{ inputs.puppeteer_replay_runner }}
+          TESTCAFE: ${{ inputs.sauce_testcafe_runner }}
+        run: |
+          set -euo pipefail
+
+          # Always send RUN_VERSION_BUMP=true; add a runner only if its box was filled.
+          args=(-X POST
+                -F "token=${TRIGGER_TOKEN}"
+                -F "ref=${REF}"
+                -F "variables[RUN_VERSION_BUMP]=true")
+
+          runner_count=0
+          if [ -n "$CYPRESS" ];    then args+=(-F "variables[SAUCE_CYPRESS_RUNNER]=${CYPRESS}");      runner_count=$((runner_count+1)); fi
+          if [ -n "$PLAYWRIGHT" ]; then args+=(-F "variables[SAUCE_PLAYWRIGHT_RUNNER]=${PLAYWRIGHT}"); runner_count=$((runner_count+1)); fi
+          if [ -n "$PUPPETEER" ];  then args+=(-F "variables[PUPPETEER_REPLAY_RUNNER]=${PUPPETEER}");  runner_count=$((runner_count+1)); fi
+          if [ -n "$TESTCAFE" ];   then args+=(-F "variables[SAUCE_TESTCAFE_RUNNER]=${TESTCAFE}");     runner_count=$((runner_count+1)); fi
+
+          if [ "$runner_count" -eq 0 ]; then
+            echo "No runner versions were provided - fill at least one box. Nothing to do." >&2
+            exit 1
+          fi
+
+          echo "Triggering pipeline with $runner_count runner update(s)..."
+          curl -fsS "${args[@]}" \
+            "https://${GITLAB_HOST}/api/v4/projects/${PROJECT_ID}/trigger/pipeline"
+          echo
+          echo "Done - check Merge requests in GitLab for the new MR."
