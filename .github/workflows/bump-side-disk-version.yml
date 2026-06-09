@@ -26,7 +26,7 @@ jobs:
   trigger-gitlab-pipeline:
     # NOTE: gitlab.tools.saucelabs.net looks internal. If a GitHub-hosted
     # runner can't reach it, change this to a self-hosted runner inside the network.
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Trigger the GitLab version-bump pipeline
         env:
