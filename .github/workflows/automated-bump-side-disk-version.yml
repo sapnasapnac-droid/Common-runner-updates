@@ -16,7 +16,7 @@ jobs:
           GITLAB_HOST: gitlab.tools.saucelabs.net
           PROJECT_ID: "4288"
           REF: main                                 # main for POC, master for the real repo
-          TRIGGER_TOKEN: ${{ secrets.GITLAB_TRIGGER_TOKEN }}   # pipeline TRIGGER token (not the push token)
+          TRIGGER_TOKEN: ${{ secrets.GITLAB_PUSH_TOKEN }}   
         run: |
           set -euo pipefail
           echo "Triggering version-bump pipeline (it auto-fetches all four runners)..."
