@@ -1,0 +1,29 @@
+name: Automated Bump side-disk runner versions 
+
+# Manual run. No inputs needed: it triggers the GitLab pipeline, which
+# auto-fetches the latest release of ALL FOUR runners and opens an MR
+# for any that are new.
+on:
+  workflow_dispatch:
+
+jobs:
+  trigger-gitlab-pipeline:
+    # internal GitLab -> must run on a self-hosted runner inside the network
+    runs-on: self-hosted
+    steps:
+      - name: Trigger the GitLab version-bump pipeline
+        env:
+          GITLAB_HOST: gitlab.tools.saucelabs.net
+          PROJECT_ID: "4288"
+          REF: main                                 # main for POC, master for the real repo
+          TRIGGER_TOKEN: ${{ secrets.GITLAB_TRIGGER_TOKEN }}   # pipeline TRIGGER token (not the push token)
+        run: |
+          set -euo pipefail
+          echo "Triggering version-bump pipeline (it auto-fetches all four runners)..."
+          curl -fsS -X POST \
+            -F "token=${TRIGGER_TOKEN}" \
+            -F "ref=${REF}" \
+            -F "variables[RUN_VERSION_BUMP]=true" \
+            "https://${GITLAB_HOST}/api/v4/projects/${PROJECT_ID}/trigger/pipeline"
+          echo
+          echo "Done - the pipeline will fetch the latest versions and open an MR if any are new."
